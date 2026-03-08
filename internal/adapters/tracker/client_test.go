@@ -486,6 +486,94 @@ func TestClient_ListQueues_WithPagination(t *testing.T) {
 	assert.Equal(t, 3, result.TotalPages)
 }
 
+func TestClient_ListBoards(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	tokenProvider := apihelpers.NewMockITokenProvider(ctrl)
+
+	var capturedURL string
+	var capturedMethod string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedURL = r.URL.String()
+		capturedMethod = r.Method
+		w.Header().Set("Content-Type", "application/json")
+		//nolint:errcheck // test helper
+		w.Write([]byte(`[
+			{
+				"self":"https://api.tracker.yandex.net/v3/boards/1",
+				"id":"1",
+				"version":2,
+				"name":"Main board",
+				"columns":[{"self":"https://api.tracker.yandex.net/v3/boards/1/columns/1","id":"1","display":"Open"}]
+			}
+		]`))
+	}))
+	t.Cleanup(func() {
+		server.Close()
+	})
+
+	tokenProvider.EXPECT().Token(gomock.Any(), gomock.Any()).Return("token", nil)
+
+	client := NewClient(newTestConfig(server.URL, "org"), tokenProvider)
+
+	result, err := client.ListBoards(t.Context())
+	require.NoError(t, err)
+
+	assert.Equal(t, http.MethodGet, capturedMethod)
+	assert.Equal(t, "/v3/boards", capturedURL)
+	require.Len(t, result, 1)
+	assert.Equal(t, "1", result[0].ID)
+	assert.Equal(t, "Main board", result[0].Name)
+	require.Len(t, result[0].Columns, 1)
+	assert.Equal(t, "Open", result[0].Columns[0].Display)
+}
+
+func TestClient_ListBoardSprints(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	tokenProvider := apihelpers.NewMockITokenProvider(ctrl)
+
+	var capturedURL string
+	var capturedMethod string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedURL = r.URL.String()
+		capturedMethod = r.Method
+		w.Header().Set("Content-Type", "application/json")
+		//nolint:errcheck // test helper
+		w.Write([]byte(`[
+			{
+				"self":"https://api.tracker.yandex.net/v3/sprints/19",
+				"id":"19",
+				"version":2,
+				"name":"Sprint 19",
+				"board":{"self":"https://api.tracker.yandex.net/v3/boards/1","id":"1","display":"Main board"},
+				"status":"in_progress"
+			}
+		]`))
+	}))
+	t.Cleanup(func() {
+		server.Close()
+	})
+
+	tokenProvider.EXPECT().Token(gomock.Any(), gomock.Any()).Return("token", nil)
+
+	client := NewClient(newTestConfig(server.URL, "org"), tokenProvider)
+
+	result, err := client.ListBoardSprints(t.Context(), "1")
+	require.NoError(t, err)
+
+	assert.Equal(t, http.MethodGet, capturedMethod)
+	assert.Equal(t, "/v3/boards/1/sprints", capturedURL)
+	require.Len(t, result, 1)
+	assert.Equal(t, "19", result[0].ID)
+	assert.Equal(t, "Sprint 19", result[0].Name)
+	require.NotNil(t, result[0].Board)
+	assert.Equal(t, "1", result[0].Board.ID)
+	assert.Equal(t, "in_progress", result[0].Status)
+}
+
 func TestClient_ListIssueComments_WithPagination(t *testing.T) {
 	t.Parallel()
 

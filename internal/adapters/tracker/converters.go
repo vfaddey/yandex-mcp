@@ -1,8 +1,6 @@
 package tracker
 
 import (
-	"strconv"
-
 	"github.com/n-r-w/yandex-mcp/internal/domain"
 )
 
@@ -96,7 +94,7 @@ func boardToTrackerBoard(dto boardDTO) domain.TrackerBoard {
 
 	return domain.TrackerBoard{
 		Self:      dto.Self,
-		ID:        strconv.Itoa(dto.ID),
+		ID:        dto.ID.String(),
 		Version:   dto.Version,
 		Name:      dto.Name,
 		CreatedAt: dto.CreatedAt,

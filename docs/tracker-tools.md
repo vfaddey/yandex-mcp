@@ -186,6 +186,67 @@ Returns `QueuesListOutput`:
 - `allow_externals` (boolean, optional)
 - `deny_voting` (boolean, optional)
 
+## tracker_boards_list
+
+Lists Yandex Tracker boards.
+
+### Input
+
+No input fields.
+
+### Output
+
+Returns `BoardsListOutput`:
+
+- `boards` (array of object): array of `BoardOutput`
+
+`BoardOutput`:
+
+- `self` (string)
+- `id` (string)
+- `version` (integer)
+- `name` (string)
+- `created_at` (string, optional)
+- `updated_at` (string, optional)
+- `created_by` (object, optional): `UserOutput`
+- `columns` (array of object, optional): array of `BoardColumnOutput`
+  - `self` (string)
+  - `id` (string)
+  - `display` (string)
+
+## tracker_board_sprints_list
+
+Lists sprints for a Yandex Tracker board.
+
+### Input
+
+- `board_id` (integer, required): Board ID.
+
+### Output
+
+Returns `BoardSprintsListOutput`:
+
+- `sprints` (array of object): array of `SprintOutput`
+
+`SprintOutput`:
+
+- `self` (string)
+- `id` (string)
+- `version` (integer)
+- `name` (string)
+- `board` (object, optional): `BoardRefOutput`
+  - `self` (string)
+  - `id` (string)
+  - `display` (string)
+- `status` (string, optional)
+- `archived` (boolean, optional)
+- `created_by` (object, optional): `UserOutput`
+- `created_at` (string, optional)
+- `start_date` (string, optional)
+- `end_date` (string, optional)
+- `start_date_time` (string, optional)
+- `end_date_time` (string, optional)
+
 ## tracker_issue_comments_list
 
 Lists comments for a Yandex Tracker issue.
