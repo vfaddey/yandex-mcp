@@ -345,6 +345,117 @@ func TestQueueToTrackerQueue(t *testing.T) {
 	}
 }
 
+func TestBoardToTrackerBoard(t *testing.T) {
+	t.Parallel()
+
+	dto := boardDTO{
+		Self:      "https://api.tracker.yandex.net/v3/boards/1",
+		ID:        "1",
+		Version:   7,
+		Name:      "Main board",
+		CreatedAt: "2026-03-01T10:00:00.000+0000",
+		UpdatedAt: "2026-03-02T10:00:00.000+0000",
+		CreatedBy: &userDTO{
+			Self:        "https://api.tracker.yandex.net/v3/users/10",
+			ID:          "10",
+			UID:         "",
+			Login:       "",
+			Display:     "Owner",
+			FirstName:   "",
+			LastName:    "",
+			Email:       "",
+			CloudUID:    "",
+			PassportUID: "",
+		},
+		Columns: []boardColDTO{
+			{
+				Self:    "https://api.tracker.yandex.net/v3/boards/1/columns/1",
+				ID:      "1",
+				Display: "Open",
+			},
+		},
+	}
+
+	result := boardToTrackerBoard(dto)
+
+	assert.Equal(t, dto.Self, result.Self)
+	assert.Equal(t, dto.ID.String(), result.ID)
+	assert.Equal(t, dto.Version, result.Version)
+	assert.Equal(t, dto.Name, result.Name)
+	assert.Equal(t, dto.CreatedAt, result.CreatedAt)
+	assert.Equal(t, dto.UpdatedAt, result.UpdatedAt)
+	require.NotNil(t, result.CreatedBy)
+	assert.Equal(t, dto.CreatedBy.Display, result.CreatedBy.Display)
+	require.Len(t, result.Columns, 1)
+	assert.Equal(t, dto.Columns[0].ID.String(), result.Columns[0].ID)
+	assert.Equal(t, dto.Columns[0].Display, result.Columns[0].Display)
+}
+
+func TestSprintToTrackerSprint(t *testing.T) {
+	t.Parallel()
+
+	dto := sprintDTO{
+		Self:    "https://api.tracker.yandex.net/v3/sprints/19",
+		ID:      "19",
+		Version: 2,
+		Name:    "Sprint 19",
+		Board: &boardRefDTO{
+			Self:    "https://api.tracker.yandex.net/v3/boards/1",
+			ID:      "1",
+			Display: "Main board",
+		},
+		Status:   "in_progress",
+		Archived: false,
+		CreatedBy: &userDTO{
+			Self:        "",
+			ID:          "10",
+			UID:         "",
+			Login:       "",
+			Display:     "Owner",
+			FirstName:   "",
+			LastName:    "",
+			Email:       "",
+			CloudUID:    "",
+			PassportUID: "",
+		},
+		CreatedAt:     "2026-03-01T10:00:00.000+0000",
+		StartDate:     "2026-03-01",
+		EndDate:       "2026-03-14",
+		StartDateTime: "2026-03-01T00:00:00.000+0000",
+		EndDateTime:   "2026-03-14T20:59:59.000+0000",
+	}
+
+	result := sprintToTrackerSprint(dto)
+
+	assert.Equal(t, dto.Self, result.Self)
+	assert.Equal(t, dto.ID.String(), result.ID)
+	assert.Equal(t, dto.Name, result.Name)
+	assert.Equal(t, dto.Status, result.Status)
+	assert.Equal(t, dto.StartDate, result.StartDate)
+	assert.Equal(t, dto.EndDate, result.EndDate)
+	require.NotNil(t, result.Board)
+	assert.Equal(t, dto.Board.ID.String(), result.Board.ID)
+	assert.Equal(t, dto.Board.Display, result.Board.Display)
+}
+
+func TestBoardRefToTrackerBoardRef(t *testing.T) {
+	t.Parallel()
+
+	assert.Nil(t, boardRefToTrackerBoardRef(nil))
+
+	dto := &boardRefDTO{
+		Self:    "https://api.tracker.yandex.net/v3/boards/1",
+		ID:      "1",
+		Display: "Main board",
+	}
+
+	result := boardRefToTrackerBoardRef(dto)
+	require.NotNil(t, result)
+	assert.Equal(t, dto.Self, result.Self)
+	assert.Equal(t, dto.ID.String(), result.ID)
+	assert.Equal(t, dto.Display, result.Display)
+}
+
 func TestCommentToTrackerComment(t *testing.T) {
 	t.Parallel()
 

@@ -124,6 +124,33 @@ func (r *Registrator) listQueues(ctx context.Context, input listQueuesInputDTO) 
 	return mapQueuesResultToOutput(result), nil
 }
 
+// listBoards lists all Tracker boards.
+func (r *Registrator) listBoards(ctx context.Context, _ listBoardsInputDTO) (*boardsListOutputDTO, error) {
+	boards, err := r.adapter.ListBoards(ctx)
+	if err != nil {
+		return nil, helpers.ToSafeError(ctx, domain.ServiceTracker, err)
+	}
+
+	return mapBoardsToOutput(boards), nil
+}
+
+// listBoardSprints lists sprints for a Tracker board.
+func (r *Registrator) listBoardSprints(
+	ctx context.Context,
+	input listBoardSprintsInputDTO,
+) (*boardSprintsListOutputDTO, error) {
+	if strings.TrimSpace(input.BoardID) == "" {
+		return nil, errors.New("board_id is required")
+	}
+
+	sprints, err := r.adapter.ListBoardSprints(ctx, input.BoardID)
+	if err != nil {
+		return nil, helpers.ToSafeError(ctx, domain.ServiceTracker, err)
+	}
+
+	return mapSprintsToOutput(sprints), nil
+}
+
 // listComments lists comments for a Tracker issue.
 func (r *Registrator) listComments(ctx context.Context, input listCommentsInputDTO) (*commentsListOutputDTO, error) {
 	if input.IssueID == "" {
