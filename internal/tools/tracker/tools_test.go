@@ -379,15 +379,15 @@ func TestTools_ListBoards(t *testing.T) {
 func TestTools_ListBoardSprints(t *testing.T) {
 	t.Parallel()
 
-	t.Run("returns error when board_id is not positive", func(t *testing.T) {
+	t.Run("returns error when board_id is empty", func(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		mockAdapter := NewMockITrackerAdapter(ctrl)
 		reg := NewRegistrator(mockAdapter, domain.TrackerAllTools(), defaultAttachExtensions, defaultAttachViewExts, defaultAttachDirs)
 
-		_, err := reg.listBoardSprints(t.Context(), listBoardSprintsInputDTO{BoardID: 0})
+		_, err := reg.listBoardSprints(t.Context(), listBoardSprintsInputDTO{BoardID: "   "})
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "board_id must be a positive integer")
+		assert.Contains(t, err.Error(), "board_id is required")
 	})
 
 	t.Run("calls adapter and maps output", func(t *testing.T) {
@@ -413,7 +413,7 @@ func TestTools_ListBoardSprints(t *testing.T) {
 			ListBoardSprints(gomock.Any(), "1").
 			Return(expectedSprints, nil)
 
-		result, err := reg.listBoardSprints(t.Context(), listBoardSprintsInputDTO{BoardID: 1})
+		result, err := reg.listBoardSprints(t.Context(), listBoardSprintsInputDTO{BoardID: "1"})
 		require.NoError(t, err)
 		require.Len(t, result.Sprints, 1)
 		assert.Equal(t, "19", result.Sprints[0].ID)

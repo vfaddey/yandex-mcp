@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/n-r-w/yandex-mcp/internal/domain"
@@ -140,11 +139,11 @@ func (r *Registrator) listBoardSprints(
 	ctx context.Context,
 	input listBoardSprintsInputDTO,
 ) (*boardSprintsListOutputDTO, error) {
-	if input.BoardID <= 0 {
-		return nil, errors.New("board_id must be a positive integer")
+	if strings.TrimSpace(input.BoardID) == "" {
+		return nil, errors.New("board_id is required")
 	}
 
-	sprints, err := r.adapter.ListBoardSprints(ctx, strconv.Itoa(input.BoardID))
+	sprints, err := r.adapter.ListBoardSprints(ctx, input.BoardID)
 	if err != nil {
 		return nil, helpers.ToSafeError(ctx, domain.ServiceTracker, err)
 	}

@@ -220,7 +220,7 @@ Lists sprints for a Yandex Tracker board.
 
 ### Input
 
-- `board_id` (integer, required): Board ID.
+- `board_id` (string, required): Board ID.
 
 ### Output
 

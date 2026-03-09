@@ -98,7 +98,7 @@ type listBoardsInputDTO struct {
 
 // listBoardSprintsInputDTO is the input for tracker_board_sprints_list tool.
 type listBoardSprintsInputDTO struct {
-	BoardID int `json:"board_id" jsonschema:"Board ID as integer. Example: 1,required"`
+	BoardID string `json:"board_id" jsonschema:"Board ID as string. Example: '1',required"`
 }
 
 // listCommentsInputDTO is the input for tracker_issue_comments_list tool.
