@@ -127,6 +127,67 @@ func (r *Registrator) listGrids(ctx context.Context, input listGridsInputDTO) (*
 	return mapGridsPageToOutput(result), nil
 }
 
+// normalizeDescendantsOpts validates and builds shared options for descendants listing.
+func normalizeDescendantsOpts(
+	actuality, cursor string, pageSize int,
+) (domain.WikiListDescendantsOpts, error) {
+	if pageSize < 0 {
+		return domain.WikiListDescendantsOpts{}, errors.New("page_size must be non-negative")
+	}
+
+	if pageSize > maxDescendantsPageSize {
+		return domain.WikiListDescendantsOpts{}, fmt.Errorf("page_size must not exceed %d", maxDescendantsPageSize)
+	}
+
+	return domain.WikiListDescendantsOpts{
+		Actuality: actuality,
+		Cursor:    cursor,
+		PageSize:  pageSize,
+	}, nil
+}
+
+// listDescendants lists subpages of a Wiki page by its slug. Empty slug lists from root.
+func (r *Registrator) listDescendants(
+	ctx context.Context, input listDescendantsInputDTO,
+) (*descendantsListOutputDTO, error) {
+	helpers.TrimStringFields(&input.Slug, &input.Actuality, &input.Cursor)
+
+	opts, err := normalizeDescendantsOpts(input.Actuality, input.Cursor, input.PageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := r.adapter.ListDescendantsBySlug(ctx, input.Slug, opts)
+	if err != nil {
+		return nil, helpers.ToSafeError(ctx, domain.ServiceWiki, err)
+	}
+
+	return mapDescendantsPageToOutput(result), nil
+}
+
+// listDescendantsByID lists subpages of a Wiki page by its ID.
+func (r *Registrator) listDescendantsByID(
+	ctx context.Context, input listDescendantsByIDInputDTO,
+) (*descendantsListOutputDTO, error) {
+	helpers.TrimStringFields(&input.PageID, &input.Actuality, &input.Cursor)
+
+	if input.PageID == "" {
+		return nil, errors.New("page_id is required")
+	}
+
+	opts, err := normalizeDescendantsOpts(input.Actuality, input.Cursor, input.PageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := r.adapter.ListDescendantsByID(ctx, input.PageID, opts)
+	if err != nil {
+		return nil, helpers.ToSafeError(ctx, domain.ServiceWiki, err)
+	}
+
+	return mapDescendantsPageToOutput(result), nil
+}
+
 // getGrid retrieves a dynamic table by its ID.
 func (r *Registrator) getGrid(ctx context.Context, input getGridInputDTO) (*gridOutputDTO, error) {
 	input.Fields = helpers.TrimStrings(input.Fields)

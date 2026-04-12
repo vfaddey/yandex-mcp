@@ -228,6 +228,62 @@ func (c *Client) GetGridByID(
 	return gridToWikiGrid(&grid), nil
 }
 
+// applyDescendantsOptsQuery writes shared descendants listing options into URL query values.
+func applyDescendantsOptsQuery(query url.Values, opts domain.WikiListDescendantsOpts) {
+	if opts.Actuality != "" {
+		query.Set("actuality", opts.Actuality)
+	}
+	if opts.Cursor != "" {
+		query.Set("cursor", opts.Cursor)
+	}
+	if opts.PageSize > 0 {
+		pageSize := opts.PageSize
+		if pageSize > maxDescendantsSize {
+			pageSize = maxDescendantsSize
+		}
+		query.Set("page_size", strconv.Itoa(pageSize))
+	}
+}
+
+// listDescendants is a shared implementation for listing page descendants.
+func (c *Client) listDescendants(
+	ctx context.Context, endpoint string, query url.Values, opts domain.WikiListDescendantsOpts, operation string,
+) (*domain.WikiDescendantsPage, error) {
+	u, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, c.apiClient.ErrorLogWrapper(ctx, fmt.Errorf("parse endpoint path: %w", err))
+	}
+
+	applyDescendantsOptsQuery(query, opts)
+	u.RawQuery = query.Encode()
+
+	var resp descendantsResponseDTO
+	if _, err = c.apiClient.DoGET(ctx, u.String(), &resp, operation); err != nil {
+		return nil, err
+	}
+
+	return descendantsResponseToWikiDescendantsPage(&resp), nil
+}
+
+// ListDescendantsBySlug lists subpages of a Wiki page by its slug.
+func (c *Client) ListDescendantsBySlug(
+	ctx context.Context, slug string, opts domain.WikiListDescendantsOpts,
+) (*domain.WikiDescendantsPage, error) {
+	q := make(url.Values)
+	q.Set("slug", slug)
+
+	return c.listDescendants(ctx, "/v1/pages/descendants", q, opts, "ListDescendantsBySlug")
+}
+
+// ListDescendantsByID lists subpages of a Wiki page by its ID.
+func (c *Client) ListDescendantsByID(
+	ctx context.Context, id string, opts domain.WikiListDescendantsOpts,
+) (*domain.WikiDescendantsPage, error) {
+	return c.listDescendants(
+		ctx, "/v1/pages/"+url.PathEscape(id)+"/descendants", make(url.Values), opts, "ListDescendantsByID",
+	)
+}
+
 // parseError converts an HTTP error response into a domain.UpstreamError.
 func (c *Client) parseError(ctx context.Context, statusCode int, body []byte, operation string) error {
 	var errResp errorResponseDTO
